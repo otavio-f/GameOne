@@ -25,7 +25,7 @@ namespace GameTests.Models
 
             p1 = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = new Attributes()
                 {
                     Strength = 1.5,
@@ -36,31 +36,39 @@ namespace GameTests.Models
                     HealFactor = 0.019,
                     TakeoverTendency = 0.033
                 },
-                Item = new Item()
+                Capacity = new Capacity()
                 {
-                    Attributes = new Attributes()
-                    {
-                        Strength = 0.0,
-                        Sensitivity = -0.155,
-                        Dexterity = 0.02,
-                        Effort = -0.45,
-                        RecoverFactor = 0.0,
-                        HealFactor = 0.0,
-                        TakeoverTendency = 0.01
-                    }
-                },
-                Hability = new Hability()
-                {
-                    Cooldown = 5,
-                    Cost = 256,
-                    Power = 1024,
-                    Recoil = 64
+                    CarryCapacity = 1,
+                    SkillCount = 4
                 }
             };
 
+            p1.Items.Add(new Item()
+            {
+                Weight = 0.5,
+                Attributes = new Attributes()
+                {
+                    Strength = 0.0,
+                    Sensitivity = -0.155,
+                    Dexterity = 0.02,
+                    Effort = -0.45,
+                    RecoverFactor = 0.0,
+                    HealFactor = 0.0,
+                    TakeoverTendency = 0.01
+                }
+            });
+            
+            p1.Skills.Add(new Skill()
+            {
+                Cooldown = 5,
+                Cost = 256,
+                Power = 1024,
+                Recoil = 64
+            });
+
             p2 = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = new Attributes()
                 {
                     Strength = 0.7777,
@@ -71,27 +79,35 @@ namespace GameTests.Models
                     HealFactor = 0.025,
                     TakeoverTendency = 0.25
                 },
-                Item = new Item()
+                Capacity = new Capacity()
                 {
-                    Attributes = new Attributes()
-                    {
-                        Strength = 0.01,
-                        Sensitivity = -0.01,
-                        Dexterity = 0.01,
-                        Effort = -0.05,
-                        RecoverFactor = 0.0,
-                        HealFactor = 0.0,
-                        TakeoverTendency = 0.05
-                    }
-                },
-                Hability = new Hability()
-                {
-                    Cooldown = 2,
-                    Cost = 256,
-                    Power = 128,
-                    Recoil = 128
+                    CarryCapacity = 1,
+                    SkillCount = 2
                 }
             };
+
+            p2.Items.Add(new Item()
+            {
+                Weight = 0.5,
+                Attributes = new Attributes()
+                {
+                    Strength = 0.01,
+                    Sensitivity = -0.01,
+                    Dexterity = 0.01,
+                    Effort = -0.05,
+                    RecoverFactor = 0.0,
+                    HealFactor = 0.0,
+                    TakeoverTendency = 0.05
+                }
+            });
+
+            p2.Skills.Add(new Skill()
+            {
+                Cooldown = 2,
+                Cost = 256,
+                Power = 128,
+                Recoil = 128
+            });
         }
 
         [TestMethod]
@@ -101,9 +117,9 @@ namespace GameTests.Models
             var game = new ActiveGame(p1, p2);
 
             //Act
-            game.Round();
-            game.Round();
-            game.Round();
+            game.Turn();
+            game.Turn();
+            game.Turn();
             var expectedTurnNumber = 3;
 
             //Assert
@@ -117,11 +133,11 @@ namespace GameTests.Models
             var game = new ActiveGame(p1, p2); //p1 is top, p2 is bottom
 
             //Act
-            var oldTop = game.Top;
-            var oldBottom = game.Bottom;
+            var oldTop = game.Attacker;
+            var oldBottom = game.Defender;
             game.Switch();
-            var newTop = game.Top;
-            var newBottom = game.Bottom;
+            var newTop = game.Attacker;
+            var newBottom = game.Defender;
 
 
             //Assert
@@ -136,16 +152,16 @@ namespace GameTests.Models
             var game = new ActiveGame(p1, p2); //p1 is top, p2 is bottom
 
             //Act
-            game.Round();
+            game.Turn();
             var expectedTopDamage = 0;
             var expectedTopFatigue = 0;
             var expectedBottomDamage = 0;
             var expectedBottomFatigue = 0;
 
-            var currentTopDamage = game.Top.Stats.Damage;
-            var currentTopFatigue = game.Top.Stats.Fatigue;
-            var currentBottomDamage = game.Bottom.Stats.Damage;
-            var currentBottomFatigue = game.Bottom.Stats.Fatigue;
+            var currentTopDamage = game.Attacker.Stats.Damage;
+            var currentTopFatigue = game.Attacker.Stats.Fatigue;
+            var currentBottomDamage = game.Defender.Stats.Damage;
+            var currentBottomFatigue = game.Defender.Stats.Fatigue;
 
 
             //Assert
@@ -160,12 +176,12 @@ namespace GameTests.Models
         {
             //Arrange
             var game = new ActiveGame(p1, p2); //p1 is top, p2 is bottom
-            game.Top.Hability.Cooldown = int.MaxValue; //doesn't reach
+            game.Attacker.Skills.InUse.Cooldown = int.MaxValue; //doesn't reach
 
             //Act
-            game.Round();
+            game.Turn();
             var expectedHabilityCount = 1;
-            var currentHabilityCount = game.Top.Hability.Count;
+            var currentHabilityCount = game.Attacker.Skills.InUse.Count;
 
             //Assert
             Assert.AreEqual(expectedHabilityCount, currentHabilityCount);
@@ -176,19 +192,19 @@ namespace GameTests.Models
         {
             //Arrange
             var game = new ActiveGame(p1, p2);
-            game.Top.Hability.Cooldown = 1;
+            game.Attacker.Skills.InUse.Cooldown = 1;
 
             //Act
-            game.Round();
+            game.Turn();
             var expectedTopDamage = 86;
             var expectedTopFatigue = 200;
             var expectedBottomDamage = 1307;
             var expectedBottomFatigue = 0;
 
-            var currentTopDamage = game.Top.Stats.Damage;
-            var currentTopFatigue = game.Top.Stats.Fatigue;
-            var currentBottomDamage = game.Bottom.Stats.Damage;
-            var currentBottomFatigue = game.Bottom.Stats.Fatigue;
+            var currentTopDamage = game.Attacker.Stats.Damage;
+            var currentTopFatigue = game.Attacker.Stats.Fatigue;
+            var currentBottomDamage = game.Defender.Stats.Damage;
+            var currentBottomFatigue = game.Defender.Stats.Fatigue;
 
 
             //Assert
@@ -203,15 +219,15 @@ namespace GameTests.Models
         {
             //Arrange
             var game = new ActiveGame(p1, p2); //p1 is top, p2 is bottom
-            game.Top.Hability.Cooldown = 3; //reaches soon
+            game.Attacker.Skills.InUse.Cooldown = 3; //reaches soon
 
             //Act
-            game.Round();
-            game.Round();
-            game.Round();
-            game.Round();
+            game.Turn();
+            game.Turn();
+            game.Turn();
+            game.Turn();
             var expectedHabilityCount = 1;
-            var currentHabilityCount = game.Top.Hability.Count;
+            var currentHabilityCount = game.Attacker.Skills.InUse.Count;
 
             //Assert
             Assert.AreEqual(expectedHabilityCount, currentHabilityCount);
@@ -222,20 +238,20 @@ namespace GameTests.Models
         {
             //Arrange
             var game = new ActiveGame(p1, p2); //p1 is top, p2 is bottom
-            game.Top.Stats.Fatigue = int.MaxValue;
-            game.Top.Hability.Cooldown = 0;
+            game.Attacker.Stats.Fatigue = int.MaxValue;
+            game.Attacker.Skills.InUse.Cooldown = 0;
 
             //Act
-            game.Round();
+            game.Turn();
             var expectedTopDamage = 0;
             var expectedTopFatigue = int.MaxValue;
             var expectedBottomDamage = 0;
             var expectedBottomFatigue = 0;
 
-            var currentTopDamage = game.Top.Stats.Damage;
-            var currentTopFatigue = game.Top.Stats.Fatigue;
-            var currentBottomDamage = game.Bottom.Stats.Damage;
-            var currentBottomFatigue = game.Bottom.Stats.Fatigue;
+            var currentTopDamage = game.Attacker.Stats.Damage;
+            var currentTopFatigue = game.Attacker.Stats.Fatigue;
+            var currentBottomDamage = game.Defender.Stats.Damage;
+            var currentBottomFatigue = game.Defender.Stats.Fatigue;
 
 
             //Assert
@@ -250,12 +266,12 @@ namespace GameTests.Models
         {
             //Arrange
             var game = new ActiveGame(p1, p2); //p1 is top, p2 is bottom
-            game.Top.Stats.Fatigue = int.MaxValue;
+            game.Attacker.Stats.Fatigue = int.MaxValue;
 
             //Act
-            game.Round();
+            game.Turn();
             var expectedHabilityCount = 0;
-            var currentHabilityCount = game.Top.Hability.Count;
+            var currentHabilityCount = game.Attacker.Skills.InUse.Count;
 
             //Assert
             Assert.AreEqual(expectedHabilityCount, currentHabilityCount);
@@ -268,14 +284,15 @@ namespace GameTests.Models
             //Arrange
             var game = new ActiveGame(p1, p2); //p1 is top, p2 is bottom
             // setup: one touch kill, the flash-maximum damage
-            game.Top.Attributes.Dexterity = 1_000_000.0;
-            game.Top.Hability.Cooldown = 0;
+            game.Attacker.Attributes.Dexterity = 1_000_000.0;
+            game.Attacker.Skills.InUse.Cooldown = 0;
 
             //Act
-            game.Round();
-            game.Round();
-            var expectedWinner = game.Top;
-            var (gameEnded, currentWinner) = game.CheckForWinner();
+            game.Turn();
+            game.Turn();
+            var expectedWinner = game.Attacker;
+            var gameEnded = game.HasEnded;
+            var currentWinner = game.Winner;
 
             //Assert
             Assert.IsTrue(gameEnded);
@@ -288,14 +305,15 @@ namespace GameTests.Models
             // Arrange
             var game = new ActiveGame(p1, p2);
             // setup: glass cannon, the flash, maximum damage while receiving maximum recoil
-            game.Top.Attributes.Dexterity = 1_000_000.0;
-            game.Top.Attributes.Sensitivity = 1_000_000.0;
-            game.Top.Hability.Cooldown = 0; 
+            game.Attacker.Attributes.Dexterity = 1_000_000.0;
+            game.Attacker.Attributes.Sensitivity = 1_000_000.0;
+            game.Attacker.Skills.InUse.Cooldown = 0; 
             
             //Act
-            game.Round();
-            game.Round();
-            var (gameEnded, currentWinner) = game.CheckForWinner();
+            game.Turn();
+            game.Turn();
+            var gameEnded = game.HasEnded;
+            var currentWinner = game.Winner;
 
             //Assert
             Assert.IsTrue(gameEnded);
@@ -310,13 +328,14 @@ namespace GameTests.Models
             var game = new ActiveGame(p1, p2); //p1 is top, p2 is bottom
 
             //Act
-            game.Round();
-            game.Round();
-            game.Round();
-            game.Round();
-            game.Round();
-            game.Round();
-            var (gameEnded, currentWinner) = game.CheckForWinner();
+            game.Turn();
+            game.Turn();
+            game.Turn();
+            game.Turn();
+            game.Turn();
+            game.Turn();
+            var gameEnded = game.HasEnded;
+            var currentWinner = game.Winner;
 
             //Assert
             Assert.IsFalse(gameEnded);

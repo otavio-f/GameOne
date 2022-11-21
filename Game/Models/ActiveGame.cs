@@ -2,72 +2,93 @@
 
 namespace Game.Models
 {
+    /// <summary>
+    /// Game class.
+    /// Stores the game state.
+    /// </summary>
     public class ActiveGame
     {
-        public Character Top => _top;
-        public Character Bottom => _bottom;
+        /// <summary>
+        /// The character attacking
+        /// </summary>
+        public Character Attacker => _attacker;
+        /// <summary>
+        /// The defending character
+        /// </summary>
+        public Character Defender => _defender;
+        /// <summary>
+        /// How much turns have passed
+        /// </summary>
         public int TurnCount { get; private set; } = 0;
 
-        private Character _top;
-        private Character _bottom;
+        private Character _attacker;
+        private Character _defender;
         private Random _random = new Random();
+        /// <summary>
+        /// The chance of the defender character switching position
+        /// </summary>
+        public double SwitchChance => Defender.TurnOverChance(Attacker);
 
-        public double SwitchChance => Bottom.TurnOverChance(Top);
+        /// <summary>
+        /// If anyone has lost, the game is over
+        /// </summary>
+        public bool HasEnded => (Defender.HasLost || Attacker.HasLost);
+        /// <summary>
+        /// The winner of this game
+        /// </summary>
+        public Character? Winner
+        {
+            get
+            {
+                if (Defender.HasLost && !Attacker.HasLost)
+                    return Attacker;
+                if (Attacker.HasLost && !Defender.HasLost)
+                    return Defender;
+                return null;
+            }
+        }
 
         public ActiveGame(Character p1, Character p2)
         {
-            _top = p1;
-            _bottom = p2;
+            _attacker = p1;
+            _defender = p2;
         }
 
         public void Switch()
         {
-            var temp = _top;
-            _top = _bottom;
-            _bottom = temp;
+            var temp = _attacker;
+            _attacker = _defender;
+            _defender = temp;
         }
 
-        public void Round()
+        /// <summary>
+        /// Executes a game turn
+        /// </summary>
+        public void Turn()
         {
             TurnCount++;
-            if (!Top.CanUseHability)
+            if (!Attacker.CanUseSkill)
                 return;
 
-            var hability = Top.Hability;
-            hability.IncreaseCount();
+            var skill = Attacker.Skills.InUse;
+            skill.IncreaseCount();
 
-            if (!hability.IsReady)
+            if (!skill.IsReady)
                 return;
 
-            TopAttacksBottom();
-            hability.ResetCount();
+            AttackerAttacks();
+            skill.ResetCount();
         }
 
         /// <summary>
         /// Makes the top use it's hability against the bottom character
         /// </summary>
-        private void TopAttacksBottom()
+        private void AttackerAttacks()
         {
-            var damage = Top.HabilityDamage;
-            Bottom.ReceiveDamage(damage);
-            Top.ApplyHabilityRecoil();
-            Top.ApplyHabilityCost();
-        }
-
-        /// <summary>
-        /// Check if there's a winner and if the game ended
-        /// </summary>
-        /// <returns>true if the game ended, null if there is no winner or the character winner</returns>
-        public (bool, Character?) CheckForWinner()
-        {
-            if (!Bottom.HasLost && !Top.HasLost) 
-                return (false, null); //has not ended yet
-
-            if (Bottom.HasLost && Top.HasLost)
-                return (true, null);  //both lost at the same time
-
-            var winner = Bottom.HasLost ? Top : Bottom; //one won, one lost
-            return (true, winner);
+            var damage = Attacker.SkillDamage;
+            Defender.ReceiveDamage(damage);
+            Attacker.ApplySkillRecoil();
+            Attacker.ApplySkillCost();
         }
     }
 }

@@ -14,7 +14,8 @@ namespace GameTests.Models
         private GameConfig config;
         private Attributes attributes;
         private Item item;
-        private Hability hability;
+        private Skill skill;
+        private Capacity capacity;
 
         [TestInitialize]
         public void Init()
@@ -36,7 +37,13 @@ namespace GameTests.Models
                 TakeoverTendency = 0.5
             };
 
-            hability = new Hability()
+            capacity = new Capacity()
+            {
+                CarryCapacity = 1,
+                SkillCount = 2
+            };
+
+            skill = new Skill()
             {
                 Cooldown = 2,
                 Cost = 256,
@@ -57,8 +64,10 @@ namespace GameTests.Models
 
             item = new Item()
             {
-                Attributes = itemAttributes
+                Attributes = itemAttributes,
+                Weight = 0.5
             };
+
         }
 
         [TestMethod]
@@ -67,11 +76,11 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Items.Add(item);
 
             //Act
             var expectedSTR = 1.0;
@@ -81,7 +90,7 @@ namespace GameTests.Models
             var expectedReF = 0.01;
             var expectedHeF = 0.01;
             var expectedToT = 0.55;
-            var attrs = character.AttributesAfterItemUse;
+            var attrs = character.BoostedAttributes;
 
             //Assert
             Assert.AreEqual(expectedSTR, attrs.Strength, 0.0001);
@@ -99,16 +108,16 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
 
             //Act
             
             //Assert
-            Assert.IsTrue(character.CanUseHability);
+            Assert.IsTrue(character.CanUseSkill);
         }
 
         [TestMethod]
@@ -117,17 +126,17 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
 
             //Act
             character.Stats.Fatigue = 65535;
 
             //Assert
-            Assert.IsFalse(character.CanUseHability);
+            Assert.IsFalse(character.CanUseSkill);
         }
 
         [TestMethod]
@@ -136,17 +145,17 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
 
             //Act
             character.Stats.Fatigue = 65215;
 
             //Assert
-            Assert.IsTrue(character.CanUseHability);
+            Assert.IsTrue(character.CanUseSkill);
         }
 
         [TestMethod]
@@ -155,17 +164,18 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
+            character.Items.Add(item);
 
             //Act
             character.Stats.Fatigue = 65216;
 
             //Assert
-            Assert.IsFalse(character.CanUseHability);
+            Assert.IsFalse(character.CanUseSkill);
         }
 
         [TestMethod]
@@ -174,11 +184,11 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
             character.Stats.Damage = 4096;
 
             //Act
@@ -196,11 +206,11 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
             character.Stats.Fatigue = 4096;
 
             //Act
@@ -218,11 +228,11 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
             character.Stats.Damage = 1;
 
             //Act
@@ -240,11 +250,11 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
             character.Stats.Fatigue = 1;
 
             //Act
@@ -262,17 +272,18 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
+            character.Items.Add(item);
 
             //Act
             var expectedDamage = 129.28;
 
             //Assert
-            Assert.AreEqual(expectedDamage, character.HabilityDamage, 0.0001);
+            Assert.AreEqual(expectedDamage, character.SkillDamage, 0.0001);
         }
 
 
@@ -282,11 +293,12 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
+            character.Items.Add(item);
 
             //Act
             character.ReceiveDamage(2560);
@@ -304,11 +316,11 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
 
             //Act
             character.ReceiveDamage(1);
@@ -324,11 +336,11 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
 
             //Act
             character.Stats.Damage = 1_000_000;
@@ -347,11 +359,12 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
+            character.Items.Add(item);
 
             //Act
             var damage = 65535 / .89;
@@ -369,11 +382,11 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
 
             //Act
             character.ReceiveDamage(1_000_000);
@@ -389,11 +402,11 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
 
             //Act
             character.ReceiveDamage(1_000_000);
@@ -411,14 +424,15 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
+            character.Items.Add(item);
 
             //Act
-            character.ApplyHabilityRecoil();
+            character.ApplySkillRecoil();
             var expectedDamage = 57;
             var currentDamage = character.Stats.Damage;
 
@@ -432,16 +446,16 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
 
             //Act
             character.Stats.Damage = 1_000_000;
             var resultBefore = character.HasLost;
-            character.ApplyHabilityRecoil();
+            character.ApplySkillRecoil();
             var resultAfter = character.HasLost;
 
             //Assert
@@ -455,14 +469,15 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
+            character.Items.Add(item);
 
             //Act
-            character.ApplyHabilityCost();
+            character.ApplySkillCost();
             var expectedFatigue = 320;
             var fatigue = character.Stats.Fatigue;
 
@@ -477,15 +492,16 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
+            character.Items.Add(item);
 
             var opponent = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = new Attributes()
                 {
                     Strength = 1.1,
@@ -496,20 +512,24 @@ namespace GameTests.Models
                     HealFactor = 0.01,
                     TakeoverTendency = 0.5
                 },
-                Item = new Item()
-                {
-                    Attributes = new Attributes()
-                    {
-                        Strength = 0.01,
-                        Sensitivity = -0.11,
-                        Dexterity = 0.01,
-                        Effort = 0.25,
-                        RecoverFactor = 0.0,
-                        HealFactor = 0.0,
-                        TakeoverTendency = 0.05
-                    }
-                }
+                Capacity = capacity
             };
+            opponent.Skills.Add(skill);//change here
+
+            opponent.Items.Add(new Item()
+            {
+                Weight = 0.1,
+                Attributes = new Attributes()
+                {
+                    Strength = 0.01,
+                    Sensitivity = -0.11,
+                    Dexterity = 0.01,
+                    Effort = 0.25,
+                    RecoverFactor = 0.0,
+                    HealFactor = 0.0,
+                    TakeoverTendency = 0.05
+                }
+            });
 
             //Act
             opponent.Stats.Fatigue = 128;
@@ -529,17 +549,18 @@ namespace GameTests.Models
             //Arrange
             var character = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = attributes,
-                Hability = hability,
-                Item = item
+                Capacity = capacity
             };
+            character.Skills.Add(skill);
+            character.Items.Add(item);
             character.Stats.Damage = 65535;
             character.Attributes.Strength = 0.0;
 
             var opponent = new Character()
             {
-                Stats = new Stats(config),
+                Stats = config.GenerateStats(),
                 Attributes = new Attributes()
                 {
                     Strength = 1,
@@ -550,35 +571,40 @@ namespace GameTests.Models
                     HealFactor = 0.01,
                     TakeoverTendency = 0.5
                 },
-                Item = new Item()
-                {
-                    Attributes = new Attributes()
-                    {
-                        Strength = -0.01,
-                        Sensitivity = -0.11,
-                        Dexterity = 0.01,
-                        Effort = 0.25,
-                        RecoverFactor = 0.0,
-                        HealFactor = 0.0,
-                        TakeoverTendency = 0.05
-                    }
-                }
+                Capacity = capacity
             };
 
+            character.Skills.Add(skill);//change here
+
+            opponent.Items.Add(new Item()
+            {
+                Weight = 0.0,
+                Attributes = new Attributes()
+                {
+                    Strength = 0,
+                    Sensitivity = 0,
+                    Dexterity = 0,
+                    Effort = 0,
+                    RecoverFactor = 0.0,
+                    HealFactor = 0.0,
+                    TakeoverTendency = 0
+                }
+            }); ;
+
             //Act
-            opponent.Stats.Fatigue = config.Stamina;
-            character.Stats.Fatigue = config.Stamina; //zero the current stamina
+            opponent.Stats.Fatigue = opponent.Stats.Stamina;
+            character.Stats.Fatigue = character.Stats.Stamina; //zero the current stamina
             character.Attributes.Strength = 0;
             opponent.Attributes.Strength = 0;
-            character.Item.Attributes.Strength = 0;
-            opponent.Item.Attributes.Strength = 0; //zero the strength
+            character.Items.Values[0].Attributes.Strength = 0;
+            opponent.Items.Values[0].Attributes.Strength = 0; //zero the strength
             var expectedOpponentToCharacter = 1;
             var expectedCharacterToOpponent = 1;
             var opponentToCharacter = opponent.TurnOverChance(character);
             var characterToOpponent = character.TurnOverChance(opponent);
 
             //Assert
-            Assert.AreEqual(0, character.AttributesAfterItemUse.Strength);
+            Assert.AreEqual(0, character.BoostedAttributes.Strength);
             Assert.AreEqual(expectedOpponentToCharacter, opponentToCharacter, 0.000001);
             Assert.AreEqual(expectedCharacterToOpponent, characterToOpponent, 0.000001);
         }

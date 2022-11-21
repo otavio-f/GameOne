@@ -4,7 +4,6 @@ namespace Game.Models
 {
     public class Attributes
     {
-        public int Id { get; set; }
         public double Strength { get; set; }
         public double Sensitivity { get; set; }
         public double Dexterity { get; set; }
@@ -23,7 +22,6 @@ namespace Game.Models
         {
             return new Attributes()
             {
-                Id = 0,
                 Strength = a.Strength + b.Strength,
                 Sensitivity = a.Sensitivity + b.Sensitivity,
                 Dexterity = a.Dexterity + b.Dexterity,
@@ -44,7 +42,6 @@ namespace Game.Models
         {
             return new Attributes()
             {
-                Id = 0,
                 Strength = a.Strength * b.Strength,
                 Sensitivity = a.Sensitivity * b.Sensitivity,
                 Dexterity = a.Dexterity * b.Dexterity,

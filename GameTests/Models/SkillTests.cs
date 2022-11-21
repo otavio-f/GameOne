@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 namespace GameTests.Models
 {
     [TestClass]
-    public class HabilityTests
+    public class SkillTests
     {
 
         [TestMethod]
         public void CountResetsAfterReset()
         {
             //Arrange
-            var hability = new Hability()
+            var hability = new Skill()
             {
                 Cooldown = 2
             };
@@ -33,7 +33,7 @@ namespace GameTests.Models
         public void IsReadyCorrectlyTriggers()
         {
             //Arrange
-            var hability = new Hability()
+            var hability = new Skill()
             {
                 Cooldown = 2
             };
@@ -51,7 +51,7 @@ namespace GameTests.Models
         public void IsNotReadyCorrectlyTriggersOnIncomplete()
         {
             //Arrange
-            var hability = new Hability()
+            var hability = new Skill()
             {
                 Cooldown = 3
             };
@@ -68,7 +68,7 @@ namespace GameTests.Models
         public void IsReadyCorrectlyTriggersOnExcess()
         {
             //Arrange
-            var hability = new Hability()
+            var hability = new Skill()
             {
                 Cooldown = 2
             };
@@ -94,7 +94,7 @@ namespace GameTests.Models
         public void IsNotReadyOnReset()
         {
             //Arrange
-            var hability = new Hability()
+            var hability = new Skill()
             {
                 Cooldown = 2
             };

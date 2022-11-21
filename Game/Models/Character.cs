@@ -1,68 +1,77 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-
-namespace Game.Models
+﻿namespace Game.Models
 {
 
     public class Character
     {
         public int Id { get; set; }
-        public Text Name { get; set; }
-        public Text Title { get; set; }
-        [NotMapped]
-        public Stats Stats { get; set; }
+        public String Name { get; set; }
+        public String Description { get; set; }
         public Attributes Attributes { get; set; }
-        public Hability Hability { get; set; }
-        public Item Item { get; set; }
+        private Capacity _capacity;
+        public Capacity Capacity
+        {
+            get => _capacity;
+            set
+            {
+                _capacity = value;
+                Skills = new Skillset(value.SkillCount);
+                Items = new ItemSet(value.CarryCapacity);
+            }
+        }
 
-        private bool _hasLost = false;
-        public bool HasLost => _hasLost;
+        public Stats Stats { get; set; }
+        public Skillset Skills { get; private set; }
+        public ItemSet Items { get; private set; }
 
-        List<Text> Quotes { get; set; }
+        public bool HasLost { get; private set;} = false;
+        /// <summary>
+        /// The character attributes boosted by the attributes of the item set
+        /// </summary>
+        public Attributes BoostedAttributes => Attributes + Items.AttributesSum;
 
-        public Attributes AttributesAfterItemUse => Attributes + Item.Attributes;
-
-        public bool CanUseHability
+        public bool CanUseSkill
         {
             get
             {
-                var itemCost = Hability.Cost * AttributesAfterItemUse.Effort;
+                var itemCost = Skills.InUse.Cost * BoostedAttributes.Effort;
                 return Stats.CurrentStamina >= itemCost;
             }
         }
+
         /// <summary>
-        /// The hability raw damage scaled by dexterity
+        /// The skill raw damage scaled by dexterity
         /// </summary>
-        public double HabilityDamage => AttributesAfterItemUse.Dexterity * Hability.Power;
+        public double SkillDamage => BoostedAttributes.Dexterity * Skills.InUse.Power;
 
         /// <summary>
         /// Receives damage.
-        /// The amount of received damage is scaled with the sensityvity
-        /// Sets the lost flag if there is no health remaining after
+        /// The amount of received damage is scaled with the sensitivity
+        /// Sets the lost flag if there is no health remaining
         /// </summary>
         /// <param name="rawValue"></param>
         public void ReceiveDamage(double rawValue)
         {
-            var damage = rawValue * AttributesAfterItemUse.Sensitivity;
+            var damage = rawValue * BoostedAttributes.Sensitivity;
             Stats.Damage += (int) Math.Round(damage);
-            if (!_hasLost)
+            if (!HasLost)
                 if (Stats.Health <= 0)
-                    _hasLost = true;
+                    HasLost = true;
         }
 
         /// <summary>
-        /// Applies the hability recoil into the accumulated damage
+        /// Applies the skill recoil
         /// </summary>
-        public void ApplyHabilityRecoil()
+        public void ApplySkillRecoil()
         {
-            ReceiveDamage(Hability.Recoil);
+            ReceiveDamage(Skills.InUse.Recoil);
         }
 
         /// <summary>
-        /// Scales the hability cost with the effort required and adds into the fatigue
+        /// Applies the skill cost relative to the effort required
         /// </summary>
-        public void ApplyHabilityCost()
+        public void ApplySkillCost()
         {
-            var cost = Hability.Cost * AttributesAfterItemUse.Effort;
+            var cost = Skills.InUse.Cost * BoostedAttributes.Effort;
             Stats.Fatigue += (int)Math.Round(cost);
         }
 
@@ -72,32 +81,32 @@ namespace Game.Models
         /// </summary>
         public void Heal()
         {
-            var heal = Stats.Config.DamageThreshold * AttributesAfterItemUse.HealFactor;
+            var heal = Stats.DamageThreshold * BoostedAttributes.HealFactor;
             Stats.Damage -= (int) Math.Round(heal);
             if (Stats.Damage < 0)
                 Stats.Damage = 0;
         }
         /// <summary>
-        /// Self-recover of stamina by reducing fatigue.
+        /// Self-recovers stamina by reducing fatigue.
         /// Reduces fatigue until a minimum value of zero.
         /// </summary>
         public void Recover()
         {
-            var recover = Stats.Config.Stamina * AttributesAfterItemUse.RecoverFactor;
+            var recover = Stats.Stamina * BoostedAttributes.RecoverFactor;
             Stats.Fatigue -= (int) Math.Round(recover);
             if (Stats.Fatigue < 0)
                 Stats.Fatigue = 0;
         }
 
         /// <summary>
-        /// The takeover chance to an enemy
+        /// The takeover chance relative to an enemy
         /// </summary>
         /// <param name="enemy"></param>
         /// <returns>the takeover chance, between 0 and infinity</returns>
         public double TurnOverChance(Character enemy)
         {
             const double antizero = 1.0 / 1_000_000_000;
-            var strChance = (antizero + AttributesAfterItemUse.Strength) / (antizero + enemy.AttributesAfterItemUse.Strength);
+            var strChance = (antizero + BoostedAttributes.Strength) / (antizero + enemy.BoostedAttributes.Strength);
             var staChance = (antizero + Stats.CurrentStamina) / (antizero + enemy.Stats.CurrentStamina);
             return strChance * staChance;
         }

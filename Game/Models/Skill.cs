@@ -1,14 +1,17 @@
-﻿namespace Game.Models
+﻿using Game.Base;
+
+namespace Game.Models
 {
-    public class Hability
+    public class Skill: IStorable
     {
         public int Id { get; set; }
-        public Text Name { get; set; }
-        public Text Description { get; set; }
+        public String Name { get; set; }
+        public String Description { get; set; }
         public int Power { get; set; }
         public int Cost { get; set; }
         public int Recoil { get; set; }
         public int Cooldown { get; set; }
+        public double Weight { get; } = 1;
         
         private int _count = 0;
         public int Count => _count;

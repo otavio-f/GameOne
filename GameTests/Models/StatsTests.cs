@@ -25,7 +25,7 @@ namespace GameTests.Models
             int damage = 128;
 
             //Act
-            Stats st = new Stats(config);
+            Stats st = config.GenerateStats();
             st.Damage += damage;
            
             //Assert
@@ -41,7 +41,7 @@ namespace GameTests.Models
             int fatigue = 128;
 
             //Act
-            Stats st = new Stats(config);
+            Stats st = config.GenerateStats();
             st.Fatigue += fatigue;
 
             //Assert
