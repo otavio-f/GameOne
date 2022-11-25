@@ -6,7 +6,7 @@ namespace Game.Models
     /// <summary>
     /// Holds items, has a maximum weight capacity 
     /// </summary>
-    public class ItemSet: FixedLengthStash<Item>
+    public class ItemSet: Stash<Item>
     {
         /// <summary>
         /// The sum of the attributes of all items stored

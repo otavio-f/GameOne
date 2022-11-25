@@ -2,7 +2,7 @@
 
 namespace Game.Base
 {
-    public abstract class FixedLengthStash<T> where T:IStorable
+    public abstract class Stash<T> where T:IStorable
     {
         private double capacity;
         private List<T> listing { get; set; } = new List<T>();
@@ -10,7 +10,7 @@ namespace Game.Base
 
         public double TotalCapacity => listing.Sum(k => k.Weight);
 
-        public FixedLengthStash(double capacity)
+        public Stash(double capacity)
         {
             this.capacity = capacity;
         }

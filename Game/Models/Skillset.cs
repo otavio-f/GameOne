@@ -6,7 +6,7 @@ namespace Game.Models
     /// The set of skills learned by the character.
     /// The amount of skills is limited
     /// </summary>
-    public class Skillset: FixedLengthStash<Skill>
+    public class Skillset: Stash<Skill>
     {
         private int inUseIndex = 0;
         /// <summary>
